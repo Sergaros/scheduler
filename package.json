@@ -1,0 +1,21 @@
+{
+  "name": "scheduler",
+  "version": "0.0.1",
+  "description": "Simple calendar scheduler.",
+  "main": "index.js",
+  "scripts": {
+    "test": "cross-env NODE_ENV='./test.js' NODE_PATH='.' mocha --harmony -u bdd -R spec -t 500 --recursive --watch"
+  },
+  "keywords": [
+    "scheduler"
+  ],
+  "author": "sergaros",
+  "license": "ISC",
+  "dependencies": {
+    "moment": "^2.18.1"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^3.5.3"
+  }
+}

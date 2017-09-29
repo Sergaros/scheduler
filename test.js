@@ -2,66 +2,136 @@ const scheduler = require('index.js');
 const expect = require('chai').expect
 
 describe('Scheduler tests:', function(){
-    it('getNextDate once', function(){
+
+    //calcDay
+    it('CalcDay simple task', function(){ //simple day task
         let data = {
-            schtype: '1',
-            startdate: "09.28.2017",
-            starttime: "11:25"
+            date: 1483264800000
         };
-        expect(scheduler.getNextDate(data)).equal(1506587100000);
+        expect(scheduler.calcDay(data)).equal(1483351200000);
     });
 
-    it('getNextDate daily', function(){
+    it('CalcDay everynday task', function(){
+        let data = {
+            date: 1483264800000,
+            everynday: 3
+        };
+        expect(scheduler.calcDay(data)).equal(1483524000000);
+    });
+
+    it('CalcDay daysofweek task', function(){
         let data1 = {
-            schtype: '2',
-            startdate: "09.28.2017",
-            starttime: "11:25",
-            daysofweek: "1;2;3;4;5;6;7",
-            nthflag: true
+            date: 1483264800000,
+            daysofweek: '2;4;7'
         };
 
         let data2 = {
-            schtype: '2',
-            startdate: "09.30.2017",
-            starttime: "11:25",
-            daysofweek: "1;2;3;4;5;6;7",
-            nthflag: true
+            date: 1483437600000,
+            daysofweek: '2;4;7'
         };
 
         let data3 = {
-            schtype: '2',
-            startdate: "09.01.2017",
-            starttime: "11:25",
-            daysofweek: "1;2;3;4;5;6;7",
-            nthflag: true
+            date: 1483610400000,
+            daysofweek: '2;4;7'
+        };
+
+        expect(scheduler.calcDay(data1)).equal(1483437600000);
+        expect(scheduler.calcDay(data2)).equal(1483610400000);
+        expect(scheduler.calcDay(data3)).equal(1484042400000);
+    });
+
+    //calcWeek
+    it('CalcWeek simple task', function(){
+        let data = {
+            date: 1483264800000
+        };
+        expect(scheduler.calcWeek(data)).equal(1483869600000);
+    });
+
+    it('CalcWeek everynweek task', function(){ //simple day task
+        let data = {
+            date: 1483264800000,
+            everynweek: 3
+        };
+        expect(scheduler.calcWeek(data)).equal(1485079200000);
+    });
+
+    it('CalcWeek daysofweek task', function(){
+        let data = {
+            date: 1483264800000,
+            daysofweek: '5'
+        };
+        expect(scheduler.calcWeek(data)).equal(1484301600000);
+    });
+
+    //calcMonth
+    it('CalcMonth simple task', function(){
+        let data = {
+            date: 1483264800000
+        };
+        expect(scheduler.calcMonth(data)).equal(1485943200000);
+    });
+
+    it('CalcMonth day task', function(){
+        let data1 = {
+            date: 1483264800000,
+            day: 5
+        };
+
+        let data2 = {
+            date: 1483264800000,
+            day: 31
+        };
+
+        expect(scheduler.calcMonth(data1)).equal(1486288800000);
+        expect(scheduler.calcMonth(data2)).equal(1488276000000);
+    });
+
+    it('CalcMonth weekofmonth & daysofweek task', function(){
+        let data1 = {
+            date: 1483264800000,
+            weekofmonth: 2
+        };
+
+        let data2 = {
+            date: 1483264800000,
+            weekofmonth: 4
+        };
+
+        let data3 = {
+            date: 1483264800000,
+            weekofmonth: 5,
+            daysofweek: '3;4'
         };
 
         let data4 = {
-            schtype: '2'
+            date: 1483264800000,
+            weekofmonth: 2,
+            daysofweek: '1'
         };
 
-        let data5 = {
-            schtype: '2',
-            lastrun: 1501534800000
-        };
-
-        expect(scheduler.getNextDate(data1)).equal(1506673500000); //simple next day
-        expect(scheduler.getNextDate(data2)).equal(1506846300000); //start date in future
-        expect(scheduler.getNextDate(data3)).equal(1506673500000); //start date in last
-        expect(scheduler.getNextDate(data4) > 0).true; //qa task, never run before
-        expect(scheduler.getNextDate(data5) > 0).true; //qa task
+        expect(scheduler.calcMonth(data1)).equal(1487152800000);
+        expect(scheduler.calcMonth(data2)).equal(1488276000000);
+        expect(scheduler.calcMonth(data3)).equal(1487844000000);
+        expect(scheduler.calcMonth(data4)).equal(1487584800000);
     });
 
-    it('getNextDate weekly', function(){
+    it('CalcMonth simple task', function(){
         let data1 = {
-            schtype: '3',
-            startdate: "09.28.2017",
-            starttime: "11:25",
-            daysofweek: "1;2;3;4;5;6;7",
-            nthflag: true
+            date: 1483264800000,
+            monthes: '5'
         };
 
-        //console.log('res - ', scheduler.getNextDate(data1));
-        //expect(scheduler.getNextDate(data1)).equal(1506673500000); //simple next day
+        let data2 = {
+            date: 1483264800000,
+            weekofmonth: 2,
+            daysofweek: '1',
+            monthes: '4'
+        };
+
+        expect(scheduler.calcMonth(data1)).equal(1493629200000);
+        expect(scheduler.calcMonth(data2)).equal(1492419600000);
     });
+
+
 });

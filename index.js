@@ -1,4 +1,4 @@
-/*
+/* user
     timestamp
         data.lastrun
 
@@ -18,7 +18,13 @@
         data.daysofweek
 */
 
+//const mdays = ['7', '1', '2', '3', '4', '5', '6'];
+
 const moment = require('moment');
+
+const daysInMonth= (month,year)=>{
+    return new Date(year, month, 0).getDate();
+};
 
 const zeroTime = (date) => {
     date.setHours(0);
@@ -40,20 +46,118 @@ const timeStampFromStr = (dateStr, timeStr) => {
     return date.getTime();
 };
 
-const getNextDate = (data) => {
-    const mdays = ['7', '1', '2', '3', '4', '5', '6'];
+const firstDate = ({
+    date,//timestamp
+    daysofweek//string '1;2;3;4;5;6;7'
+})=>{
+    let dt = moment(date);
+    if(daysofweek){
+        let edays = daysofweek.split(';');
+        while(edays.findIndex(d=>d==dt.weekday())===-1)
+            dt.add(1, 'd');
+    }
+    return dt.valueOf();
+};
 
-    if (!data.lastrun) data.lastrun = 0;
+const setDayOfWeek = (daysofweek, data)=>{
+    let edays = daysofweek.split(';');
+    while(edays.findIndex(d=>d==data.weekday())===-1)
+        data.add(1, 'd');
+};
+
+const calcDay = ({
+    date,//timestamp
+    everynday,//number
+    daysofweek//string '1;2;3;4;5;6;7'
+}) => {
+    let dt = moment(date);
+    if(daysofweek){
+        let edays = daysofweek.split(';');
+        do{
+            dt.add(1, 'd');
+        }while(edays.findIndex(d=>d==dt.weekday())===-1);
+    } else if(everynday){
+        dt.add(everynday, 'd');
+    } else
+        dt.add(1, 'd');
+
+    return dt.valueOf();
+};
+
+const calcWeek = ({
+    date,
+    everynweek,
+    daysofweek
+})=>{
+    let dt = moment(date);
+
+    if(!everynweek)
+        everynweek = 1;
+
+    dt.add(everynweek, 'w');
+
+    if(daysofweek)
+        setDayOfWeek(daysofweek, dt);
+
+    return dt.valueOf();
+};
+
+const calcMonth = ({
+    date,
+    day,
+    weekofmonth,
+    daysofweek,
+    monthes
+})=>{
+    let dt = moment(date);
+
+    if(monthes){
+        let emonthes = monthes.split(';');
+        while(emonthes.findIndex(d=>d==dt.month()+1)===-1)
+            dt.add(1, 'M');
+    } else
+        dt.add(1, 'M');
+
+     if(day){
+
+        let dInm = daysInMonth(dt.month()+1, dt.year());
+        if(day > dInm)
+            day = dInm;
+
+        dt.date(day);
+    } else if(weekofmonth){
+        if(weekofmonth<4){
+            dt.add(weekofmonth, 'w');
+
+            if(daysofweek)
+                setDayOfWeek(daysofweek, dt);
+        } else {
+            dt.date(daysInMonth(dt.month()+1, dt.year()));
+            if(daysofweek){
+                let edays = daysofweek.split(';');
+                while(edays.findIndex(d=>d==dt.weekday())===-1)
+                    dt.add(-1, 'd');
+            }
+        }
+    }
+
+    return dt.valueOf();
+};
+
+
+
+const getNextDate = (data) => {
 
     if (data.schtype === '0') //startup
     {
         return 0;
     } else if (data.schtype === '1') //once
     {
-        return timeStampFromStr(data.startdate, data.starttime);
-    } else if (data.schtype === '2') //daily
+        return 0;
+    } else
+    if (data.schtype === '2') //daily
     {
-        let result = moment(data.lastrun);
+        let dt;
 
         let startdate = (data.startdate && data.starttime) ? timeStampFromStr(data.startdate, data.starttime) : 0;
         let lastdate = data.lastrun;
@@ -62,143 +166,70 @@ const getNextDate = (data) => {
         if (data.starttime)
             setTimeFromStr(date, data.starttime);
 
-        let tmp = date.getTime();
+        dt = date.getTime();
 
-        if (startdate > tmp)
-            tmp = startdate;
+        if (startdate > dt)
+            dt = startdate;
 
-        if (lastdate > tmp)
-            tmp = lastdate;
+        if (lastdate > dt)
+            dt = lastdate;
 
-        result = moment(tmp);
+        return calcDay({
+            date: dt,
+            everynday: data.everynday,
+            daysofweek: data.daysofweek
+        });
 
-        if (data.hasOwnProperty('nthflag') ||
-            data.hasOwnProperty('daysofweek') ||
-            data.hasOwnProperty('everynday')) {
-            if (data.nthflag && data.daysofweek.split(';').length === 7) {
-                result.add(1, 'days');
-                return result.valueOf();
-            } else if (data.nthflag && data.daysofweek.split(';').length === 5) {
-                result.add(1, 'days');
-                while (mdays[result.day()] > 5) result.add(1, 'days');
-            } else {
-                if (lastdate !== 0)
-                    result.add(data.everynday, 'days');
-            }
-        } else
-            result.add(1, 'days');
-
-        return result.valueOf();
     } else if (data.schtype === '3') //weekly
     {
-        let result;
+        let dt;
         let time = data.starttime ? data.starttime.split(':') : [];
-        let startdate;
 
         if (data.lastrun) {
-            result = moment(data.lastrun);
-            let adddays = 7 * data.everynweek;
-            result.add(adddays, 'days');
-
+            dt = moment(data.lastrun);
         } else
-            result = moment();
+            dt = moment();
 
         if (time.length) {
-            result.set('hour', time[0]);
-            result.set('minute', time[1]);
+            dt.set('hour', time[0]);
+            dt.set('minute', time[1]);
         }
 
-        let daysofweek = data.daysofweek ? data.daysofweek.split(';') : [];
-
-        let index = -1;
-        do {
-            let day = (mdays[result.day()]) + '';
-            index = daysofweek.findIndex(d => d === day);
-            if (index === -1) {
-                result.add(1, 'days');
-            }
-        } while (index === -1)
-
-        return result.valueOf();
+        return calcWeek({
+            date: dt,
+            everynweek: data.everynweek,
+            daysofweek: data.daysofweek
+        });
     } else if (data.schtype === '4') //monthly
     {
-        let result;
+        let dt;
         let time = data.starttime ? data.starttime.split(':') : [];
-        let startdate;
 
-        if (data.lastrun) {
-            result = moment(data.lastrun);
-            result.add(1, 'months');
-        } else
-            result = moment();
+        if (data.lastrun)
+            dt = moment(data.lastrun);
+        else
+            dt = moment();
 
         if (time.length) {
-            result.set('hour', time[0]);
-            result.set('minute', time[1]);
+            dt.set('hour', time[0]);
+            dt.set('minute', time[1]);
         }
 
-        if (data.hasOwnProperty('nthflag')
-            || data.hasOwnProperty('monthes')
-            || data.hasOwnProperty('weekofmonth')) {
-            let months = data.monthes.split(';');
-            let index = -1;
-            let i = 0;
-            do {
-                index = months.findIndex(m => m == (result.get('month') + 1));
-                if (index === -1) {
-                    result.add(1, 'months');
-                }
-            } while (index === -1)
+        return calcMonth({
+            date: dt,
+            day: data.dayofmonth,
+            weekofmonth: data.weekofmonth,
+            daysofweek: data.daysofweek,
+            monthes: data.monthes
+        });
 
-            if (data.nthflag) {
-                let maxd = moment().daysInMonth();
-                let dt = parseInt(data.dayofmonth);
-
-                if (dt > maxd)
-                    dt = maxd;
-
-                result.set('date', dt);
-            } else {
-                let wofm = parseInt(data.weekofmonth);
-                let dofw = parseInt(data.daysofweek);
-
-                result.set('date', moment().date());
-
-                if (wofm === 1 || wofm === 2 || wofm === 3 || wofm === 4) {
-                    do {
-                        if (mdays[result.day()] == dofw) {
-                            wofm--;
-                        }
-                        if (wofm > 0)
-                            result.add(1, 'days');
-                    } while (wofm > 0);
-                } else {
-                    result.set('date', result.daysInMonth());
-
-                    while (mdays[result.day()] != dofw) {
-                        result.add(-1, 'days');
-                        if (result.date() === 1) {
-                            if (mdays[result.day()] == dofw)
-                                break;
-                            else {
-                                result.add(1, 'months');
-                                result.set('date', result.daysInMonth());
-                            }
-                        }
-                    }
-                }
-            }
-        } else
-            result.add(1, 'months');
-
-        return result.valueOf();
     } else if (data.schtype === '5' ||
         data.schtype === '6' ||
         data.schtype === '7') {
         let result;
 
         if (data.lastrun === 0) {
-            result = (data.startdate && data.starttime)?moment(timeStampFromStr(data.startdate, data.starttime)):moment();
+            result = (data.startdate && data.starttime) ? moment(timeStampFromStr(data.startdate, data.starttime)) : moment();
         } else {
             let months = 4;
             if (data.schtype === '6') months = 6;
@@ -228,8 +259,11 @@ const getNextDates = (data, number, type) => {
     let nextdate;
     do {
         nextdate = getNextDate(data);
-        if (nextdate)
-            results.push(nextdate)
+        if (nextdate) {
+            data.lastrun = nextdate;
+            results.push(nextdate);
+        }
+
     } while (nextdate && nextdate < lastDate.valueOf())
 
     return results;
@@ -237,5 +271,8 @@ const getNextDates = (data, number, type) => {
 
 module.exports = {
     getNextDate,
-    getNextDates
+    getNextDates,
+    calcDay,
+    calcWeek,
+    calcMonth
 }

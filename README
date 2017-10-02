@@ -1,2 +1,0 @@
-calendar-scheduler
-Simple shceduler with two functions getNextDate(data) and getNextDates(data, numer, type)

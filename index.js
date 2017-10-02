@@ -107,13 +107,13 @@ const calcMonth = ({
     day,
     weekofmonth,
     daysofweek,
-    monthes
+    months
 })=>{
     let dt = moment(date);
 
-    if(monthes){
-        let emonthes = monthes.split(';');
-        while(emonthes.findIndex(d=>d==dt.month()+1)===-1)
+    if(months){
+        let emonths = months.split(';');
+        while(emonths.findIndex(d=>d==dt.month()+1)===-1)
             dt.add(1, 'M');
     } else
         dt.add(1, 'M');
@@ -220,7 +220,7 @@ const getNextDate = (data) => {
             day: data.dayofmonth,
             weekofmonth: data.weekofmonth,
             daysofweek: data.daysofweek,
-            monthes: data.monthes
+            months: data.months
         });
 
     } else if (data.schtype === '5' ||
@@ -274,5 +274,6 @@ module.exports = {
     getNextDates,
     calcDay,
     calcWeek,
-    calcMonth
+    calcMonth,
+    firstDate
 }

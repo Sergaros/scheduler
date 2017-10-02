@@ -3,6 +3,22 @@ const expect = require('chai').expect
 
 describe('Scheduler tests:', function(){
 
+    //firstDate
+    it('firstDate simple', function(){
+        let data = {
+            date: 1483264800000
+        };
+        expect(scheduler.firstDate(data)).equal(1483264800000);
+    });
+
+    it('firstDate daysofweek', function(){
+        let data = {
+            date: 1483264800000,
+            daysofweek: '5'
+        };
+        expect(scheduler.firstDate(data)).equal(1483696800000);
+    });
+
     //calcDay
     it('CalcDay simple task', function(){ //simple day task
         let data = {
@@ -116,17 +132,17 @@ describe('Scheduler tests:', function(){
         expect(scheduler.calcMonth(data4)).equal(1487584800000);
     });
 
-    it('CalcMonth simple task', function(){
+    it('CalcMonth months task', function(){
         let data1 = {
             date: 1483264800000,
-            monthes: '5'
+            months: '5'
         };
 
         let data2 = {
             date: 1483264800000,
             weekofmonth: 2,
             daysofweek: '1',
-            monthes: '4'
+            months: '4'
         };
 
         expect(scheduler.calcMonth(data1)).equal(1493629200000);
